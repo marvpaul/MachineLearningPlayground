@@ -54,7 +54,7 @@ def createKerasModel():
     model.add(Dense(output_dim= 300, input_dim=500, activation='relu'))
     model.add(Dense(output_dim=10, input_dim=300, activation='softmax'))
     # Compile model
-    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     model.save('cifar10Model.keras')
 
 #Just another try to create a net
@@ -86,7 +86,7 @@ def trainKerasModel(input, output):
     model = load_model('cifar10Model.keras')
 
     # Fit the model
-    model.fit(numpy.array(input), numpy.array(output), epochs=50, batch_size=3)
+    model.fit(numpy.array(input), numpy.array(output), epochs=10, batch_size=3)
 
     scores = model.evaluate(numpy.array(input), numpy.array(output))
     print("\n%s: %.2f%%" % (model.metrics_names[1], scores[1]*100))
@@ -100,12 +100,12 @@ def testModel(input, output):
 
 inputData, outputData = createTrainingData(2000)
 
-inputTrainingsData = inputData[0:1000]
-outputTrainingsData = outputData[0:1000]
+inputTrainingsData = inputData[0:200]
+outputTrainingsData = outputData[0:200]
 
 inputTestData = inputData[1001:1999]
 outputTestData = outputData[1001:1999]
 
 #createKerasModel()
-#trainKerasModel(inputData, outputData)
+trainKerasModel(inputTrainingsData, outputTrainingsData)
 testModel(inputTestData, outputTestData)
