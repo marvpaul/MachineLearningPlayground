@@ -67,19 +67,6 @@ def createKerasModel(input, output):
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     model.save(modelPath)
 
-'''Create a keras model with input of 3072 and output of 10
-    which represents the number of classes cifar10 has defined'''
-def createKerasModel2(input, output):
-    # create model
-    model = Sequential([
-        Dense(output_dim=1000, input_dim=3072, activation='relu'),
-        Dense(output_dim=500, input_dim=1000, activation='relu'),
-        Dense(output_dim=250, input_dim=500, activation='relu'),
-        Dense(output_dim=10, input_dim=250, activation='softmax'),
-    ])
-    # Compile model
-    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
-    model.save(modelPath)
 
 #using the model mentioned here: https://elitedatascience.com/keras-tutorial-deep-learning-in-python
 def createKerasModel3():
@@ -97,18 +84,6 @@ def createKerasModel3():
                   optimizer='adam',
                   metrics=['accuracy'])
     model.save(modelPath)
-
-
-# Just another try to create a net
-def createOtherModel():
-    # create model
-    model = Sequential([
-        Dense(output_dim=3072, input_dim=3072, activation='relu'),
-        Dense(output_dim=10, input_dim=3072, activation='softmax'),
-    ])
-    # Compile model
-    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-    model.save('cifar10Model.keras')
 
 
 # Create some trainingsdata for the model
@@ -149,22 +124,23 @@ def makePrediction(image):
     print(prediction)
     print('The net think your images is a:' + imagesClasses[index])
 
+#Just reshape the array format of given images to fit to neural net structure
+def prepareInputImages(images):
+    images = numpy.array(images)
+    return images.reshape(len(images), 32, 32, 3)
+
 
 inputData, outputData = createTrainingData()
 print('Loaded ' + str(len(inputData)) + 'images')
 
-inputTrainingsData = numpy.array(inputData[:40000])
+inputTrainingsData = prepareInputImages(inputData[:40000])
 outputTrainingsData = numpy.array(outputData[:40000])
-inputTrainingsData = inputTrainingsData.reshape(len(inputTrainingsData), 32, 32, 3)
 
-inputTestData = numpy.array(inputData[49000:49999])
-inputTestData = inputTestData.reshape(len(inputTestData), 32, 32, 3)
+inputTestData = prepareInputImages(inputData[49000:49999])
 outputTestData = numpy.array(outputData[49000:49999])
 
-image = inputData[49886]
-predictImage = numpy.array(image)
-predictImage = predictImage.reshape(1, 32, 32, 3)
-printImage(numpy.array(image)*255, 'test')
+predictImage = prepareInputImages(inputData[49886])
+printImage(predictImage*255, 'test')
 makePrediction(predictImage)
 
 
