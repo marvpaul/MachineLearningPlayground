@@ -7,8 +7,10 @@ import numpy
 import h5py
 import pickle
 from PIL import Image
+import operator
 
 modelPath = './cifar/data/cifar10Model3.keras'
+imagesClasses = ['airplane', 'automobile', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck']
 
 # load images from cifar10
 def getImages():
@@ -140,6 +142,14 @@ def testModel(input, output):
     print("\n%s: %.2f%%" % (model.metrics_names[1], scores[1] * 100))
 
 
+def makePrediction(image):
+    model = load_model(modelPath)
+    prediction = model.predict(image)
+    index, value = max(enumerate(prediction[0]), key=operator.itemgetter(1))
+    print(prediction)
+    print('The net think your images is a:' + imagesClasses[index])
+
+
 inputData, outputData = createTrainingData()
 print('Loaded ' + str(len(inputData)) + 'images')
 
@@ -151,7 +161,13 @@ inputTestData = numpy.array(inputData[49000:49999])
 inputTestData = inputTestData.reshape(len(inputTestData), 32, 32, 3)
 outputTestData = numpy.array(outputData[49000:49999])
 
+image = inputData[49886]
+predictImage = numpy.array(image)
+predictImage = predictImage.reshape(1, 32, 32, 3)
+printImage(numpy.array(image)*255, 'test')
+makePrediction(predictImage)
+
 
 #createKerasModel3()
-trainKerasModel(inputTrainingsData, outputTrainingsData)
-testModel(inputTestData, outputTestData)
+#trainKerasModel(inputTrainingsData, outputTrainingsData)
+#testModel(inputTestData, outputTestData)
