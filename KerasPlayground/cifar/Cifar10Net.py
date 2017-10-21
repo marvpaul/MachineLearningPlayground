@@ -1,12 +1,14 @@
 from keras.models import Sequential
-from keras.layers import Dense
 from keras.models import load_model
+from keras.layers import Dense, Dropout, Activation, Flatten
+
+from keras.layers import Convolution2D, MaxPooling2D
 import numpy
 import h5py
 import pickle
 from PIL import Image
 
-modelPath = './cifar/data/cifar10Model.keras'
+modelPath = './cifar/data/cifar10Model3.keras'
 
 # load images from cifar10
 def getImages():
@@ -53,12 +55,45 @@ def printImage(pic, name):
 def createKerasModel(input, output):
     # create model
     model = Sequential([
-        Dense(output_dim=200, input_dim=3072, activation='relu'),
-        Dense(output_dim=200, input_dim=200, activation='relu'),
-        Dense(output_dim=10, input_dim=200, activation='softmax'),
+        Dense(output_dim=250, input_dim=3072, activation='relu'),
+        Dense(output_dim=100, input_dim=250, activation='relu'),
+        Dense(output_dim=50, input_dim=100, activation='relu'),
+        Dense(output_dim=25, input_dim=50, activation='relu'),
+        Dense(output_dim=10, input_dim=25, activation='softmax'),
     ])
     # Compile model
     model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.save(modelPath)
+
+'''Create a keras model with input of 3072 and output of 10
+    which represents the number of classes cifar10 has defined'''
+def createKerasModel2(input, output):
+    # create model
+    model = Sequential([
+        Dense(output_dim=1000, input_dim=3072, activation='relu'),
+        Dense(output_dim=500, input_dim=1000, activation='relu'),
+        Dense(output_dim=250, input_dim=500, activation='relu'),
+        Dense(output_dim=10, input_dim=250, activation='softmax'),
+    ])
+    # Compile model
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.save(modelPath)
+
+#using the model mentioned here: https://elitedatascience.com/keras-tutorial-deep-learning-in-python
+def createKerasModel3():
+    #create model
+    model = Sequential()
+    model.add(Convolution2D(32, 3, 3, activation='relu', input_shape=(32,32,3)))
+    model.add(Convolution2D(32, 3, 3, activation='relu'))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.25))
+    model.add(Flatten())
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(10, activation='softmax'))
+    model.compile(loss='categorical_crossentropy',
+                  optimizer='adam',
+                  metrics=['accuracy'])
     model.save(modelPath)
 
 
@@ -91,9 +126,9 @@ def trainKerasModel(input, output):
     model = load_model(modelPath)
 
     # Fit the model
-    model.fit(numpy.array(input), numpy.array(output), epochs=50, batch_size=100)
+    model.fit(input, output, epochs=10, batch_size=1000)
 
-    scores = model.evaluate(numpy.array(input), numpy.array(output))
+    scores = model.evaluate(input, output)
     print("\n%s: %.2f%%" % (model.metrics_names[1], scores[1] * 100))
     model.save(modelPath)
 
@@ -108,13 +143,15 @@ def testModel(input, output):
 inputData, outputData = createTrainingData()
 print('Loaded ' + str(len(inputData)) + 'images')
 
-inputTrainingsData = inputData[0:48999]
-outputTrainingsData = outputData[0:48999]
+inputTrainingsData = numpy.array(inputData[:40000])
+outputTrainingsData = numpy.array(outputData[:40000])
+inputTrainingsData = inputTrainingsData.reshape(len(inputTrainingsData), 32, 32, 3)
 
-inputTestData = inputData[49000:49999]
-outputTestData = outputData[49000:49999]
+inputTestData = numpy.array(inputData[49000:49999])
+inputTestData = inputTestData.reshape(len(inputTestData), 32, 32, 3)
+outputTestData = numpy.array(outputData[49000:49999])
 
 
-#createKerasModel(inputTrainingsData, outputTrainingsData)
-#trainKerasModel(inputTrainingsData, outputTrainingsData)
+#createKerasModel3()
+trainKerasModel(inputTrainingsData, outputTrainingsData)
 testModel(inputTestData, outputTestData)
