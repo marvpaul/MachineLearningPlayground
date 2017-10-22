@@ -103,7 +103,7 @@ def trainKerasModel(input, output):
     model = load_model(modelPath)
 
     # Fit the model
-    model.fit(input, output, epochs=10, batch_size=1000)
+    model.fit(input, output, epochs=100, batch_size=1000)
 
     scores = model.evaluate(input, output)
     print("\n%s: %.2f%%" % (model.metrics_names[1], scores[1] * 100))
@@ -133,14 +133,16 @@ def prepareInputImages(images):
 inputData, outputData = createTrainingData()
 print('Loaded ' + str(len(inputData)) + 'images')
 
-inputTrainingsData = prepareInputImages(inputData[:40000])
-outputTrainingsData = numpy.array(outputData[:40000])
+inputTrainingsData = prepareInputImages(inputData[:49000])
+outputTrainingsData = numpy.array(outputData[:49000])
 
 inputTestData = prepareInputImages(inputData[49000:49999])
 outputTestData = numpy.array(outputData[49000:49999])
 
-predictImage = prepareInputImages(inputData[49886])
+predictImage = numpy.array(inputData[49887])
 printImage(predictImage*255, 'test')
+predictImage = predictImage.reshape(1, 32, 32, 3)
+
 makePrediction(predictImage)
 
 
