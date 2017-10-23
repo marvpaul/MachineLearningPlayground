@@ -159,10 +159,6 @@ class KNearestNeighbor(object):
             for index in k_nearest_training_image_indexes:
                 closest_y.append(self.y_train[index])
             print(str(i) + 'images analyzed :)')
-            y_pred[i] = (closest_y[np.argmax(closest_y)])
-
-
-
             #########################################################################
             # TODO (2):                                                             #
             # Now that you have found the labels of the k nearest neighbors, you    #
@@ -170,7 +166,8 @@ class KNearestNeighbor(object):
             # Store this label in y_pred[i]. Break ties by choosing the smaller     #
             # label.                                                                #
             #########################################################################
-
+            number_of_label_occurences = np.bincount(closest_y)
+            y_pred[i] = np.argmax(number_of_label_occurences)
             #########################################################################
             #                           END OF YOUR CODE                            #
             #########################################################################
