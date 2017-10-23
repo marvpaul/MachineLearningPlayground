@@ -45,6 +45,13 @@ class KNearestNeighbor(object):
         return self.predict_labels(dists, k=k)
 
     def euclideanDistance(self, img_train, img_test):
+        """
+        Calculate euclidean instance between img_train with n images and img_test with m images and store in
+        a n x m dimensional array
+        :param img_train:
+        :param img_test:
+        :return:
+        """
         distance = 0
         index = 0
         for data in img_train:
@@ -78,7 +85,8 @@ class KNearestNeighbor(object):
         #####################################################################
         for i in range(num_test):
             for j in range(num_train):
-                dists[i, j] = sum(abs(self.X_train[j] - X[i]))
+                    dists[i, j] = np.sum(np.abs(self.X_train[j] - X[i]))
+            print(str(i) + 'th image distances calculated')
         #####################################################################
         #                       END OF YOUR CODE                            #
         #####################################################################
@@ -146,7 +154,15 @@ class KNearestNeighbor(object):
             # neighbors. Store these labels in closest_y.                           #
             # Hint: Look up the function numpy.argsort.                             #
             #########################################################################
-            
+            #determine k image indexes which have the smallest euclidean distance to the ith test image
+            k_nearest_training_image_indexes = np.argsort(dists[i])[0:k]
+            for index in k_nearest_training_image_indexes:
+                closest_y.append(self.y_train[index])
+            print(str(i) + 'images analyzed :)')
+            y_pred[i] = (closest_y[np.argmax(closest_y)])
+
+
+
             #########################################################################
             # TODO (2):                                                             #
             # Now that you have found the labels of the k nearest neighbors, you    #

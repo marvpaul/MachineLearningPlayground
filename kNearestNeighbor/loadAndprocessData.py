@@ -155,13 +155,13 @@ def plotSampleImages(images, labels):
 #####################################################################
 
 # Subsample trainings data
-num_training = 3 #5000
+num_training = 5000 #5000
 mask = range(num_training)
 X_train = X_train[mask]
 y_train = y_train[mask]
 
 # Subsample test data
-num_test = 2 #500
+num_test = 500 #500
 mask = range(num_test)
 X_test = X_test[mask]
 y_test = y_test[mask]
@@ -196,6 +196,7 @@ classifier.train(X_train, y_train)
 dists = classifier.compute_distances_with_loops(X_test)
 print(dists.shape) # Should be: (500, 5000)
 
+'''
 # This task is not vital for the notebook. Run that cell only if you have implement the vectorized function
 dists_vec = classifier.compute_distances_vectorized(X_test)
 
@@ -206,3 +207,12 @@ if difference < 0.001:
     print('Good! The distance matrices are the same')
 else:
     print('Uh-oh! The distance matrices are different')
+'''
+
+# Before running this cell: implement the function predict_labels
+y_test_pred = classifier.predict_labels(dists,5)
+
+# Compute and print the fraction of correctly predicted examples
+num_correct = np.sum(y_test_pred == y_test)
+accuracy = float(num_correct) / num_test
+print('Got %d / %d correct => accuracy: %f' % (num_correct, num_test, accuracy))
