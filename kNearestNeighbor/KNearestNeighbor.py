@@ -85,7 +85,7 @@ class KNearestNeighbor(object):
         #####################################################################
         for i in range(num_test):
             for j in range(num_train):
-                    dists[i, j] = np.sum(np.abs(self.X_train[j] - X[i]))
+                    dists[i, j] = np.sum(np.abs(np.subtract(self.X_train[j], X[i])))
             print(str(i) + 'th image distances calculated')
         #####################################################################
         #                       END OF YOUR CODE                            #
