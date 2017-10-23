@@ -5,6 +5,7 @@ import random
 # create vectors a and b with 10 digits between 0-255
 vec_a = random.sample(range(255), 10)
 vec_b = random.sample(range(255), 10)
+mat = create_random_matrix(3, 10)
 
 print ("Vektor a: ", vec_a)
 print ("Vektor b: ", vec_b)
@@ -34,3 +35,13 @@ print("Are the operations arithmetically equal?", np.array_equal(result, np.dot(
 result = create_random_matrix(10, 10)
 print("Shape: ", np.array(result).shape)
 print("Is the shape as expected? ", np.array_equal(np.array(result).shape, (10, 10)))
+
+#Vec * matrix
+result = matrix_vector_mul(mat, vec_a)
+print("Result of matrix and vector multiplication: ", result)
+print("Are the operations arithmetically equal?", np.array_equal(result, np.dot(np.array(mat), np.array(vec_a))))
+
+test_mat = [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+result = matrix_transpose(test_mat)
+print("Result of transposing: ", result)
+print("Are the operations arithmetically equal?", np.array_equal(np.transpose(test_mat), result))
