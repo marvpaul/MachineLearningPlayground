@@ -121,7 +121,18 @@ class KNearestNeighbor(object):
         #       multiplication and two broadcast sums.                          #
         #########################################################################
         #http://nonconditional.com/2014/04/on-the-trick-for-computing-the-squared-euclidian-distances-between-two-sets-of-vectors/
-        dists = list(map(abs, (set(map(sum, X)) - set(map(sum, self.X_train)))))
+        #Using dot product?
+        #X_square = list(map(sum, X*X))
+        #Y_square = list(map(sum, self.X_train*self.X_train))
+        X_brod = np.broadcast_to(X, (len(self.X_train), len(X), 3072))
+        Y_brod = np.broadcast_to(self.X_train, (len(X), len(self.X_train), 3072))
+
+
+
+
+
+        #dists = np.subtract(np.transpose(np.add(X_brod, Y_brod)), 2*np.dot(X, (np.transpose(self.X_train))))
+        dists = np.sum(np.abs(np.subtract(X_brod, np.transpose(Y_brod, axes=(1, 0, 2)))), axis=2)
         #TODO: Continue here :)
         #########################################################################
         #                         END OF YOUR CODE                              #

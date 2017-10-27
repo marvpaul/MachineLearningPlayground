@@ -106,7 +106,7 @@ def matrix_vector_mul(mat, vec):
 def matrix_transpose(a):
     #####################################################################
     # TODO (1):                                                         #
-    # transpose a matrix A as defined in the notebook	  								#
+    # transpose a matrix A as defined in the notebook	  				#
     #####################################################################
     transposed = []
     for row in range(len(a[0])):
