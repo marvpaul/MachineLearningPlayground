@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import tensorflow
 
 
-learning_rate = 0.1
+learning_rate = 1
 
 # class 0:
 # covariance matrix and mean
@@ -20,6 +20,11 @@ mean1 = np.array([1.,1])
 m1 = 100
 
 
+# Parameters
+learning_rate = 1
+training_epochs = 25
+batch_size = 5
+display_step = 1
 
 
 
@@ -28,25 +33,57 @@ m1 = 100
 r0 = np.random.multivariate_normal(mean0, cov0, m0)
 r1 = np.random.multivariate_normal(mean1, cov1, m1)
 
+inputData = np.transpose(np.array([(r0[...,0][:95]) + (r1[...,0][:95]), (r0[...,1][:95] + (r1[...,1][:95]))]))
+
+out_data = np.append(np.ones(95), np.zeros(95))
+
+#out_trainingsdata = (r0[...,1][95:])(r1[...,1][95:])
+
 # Set model weights
 #Input, output
-W = tensorflow.Variable(tensorflow.zeros([100, 100]))
-b = tensorflow.Variable(tensorflow.zeros([100]))
+W = tensorflow.Variable(tensorflow.zeros([2, 1]))
+b = tensorflow.Variable(tensorflow.zeros([1]))
 
-x1 = tensorflow.placeholder(tensorflow.float32, [None, 100])
-y = tensorflow.placeholder(tensorflow.float32, [None, 100])
+x = tensorflow.placeholder(tensorflow.float32, [None, 2])
+y = tensorflow.placeholder(tensorflow.float32, [None, 1])
 
-model = tensorflow.nn.softmax(tensorflow.matmul(x1, W) + b) # Softmax
+model = tensorflow.nn.softmax(tensorflow.matmul(x, W) + b) # Softmax, logistic regression
 
+# Minimize error using cross entropy without using LD2 log
+cost = tensorflow.reduce_mean(-tensorflow.reduce_sum(y*tensorflow.log(model), reduction_indices=1))
 
-# Minimize error using cross entropy
-cost = tensorflow.reduce_mean((-np.sum(y*tensorflow.log(model)) + np.sum((y - model)*(y - model))), reduction_indices=1)
 # Gradient Descent
-#optimizer = tensorflow.train.GradientDescentOptimizer(learning_rate).minimize(cost)
-optimizer = tensorflow.train.GradientDescentOptimizer(learning_rate)
+optimizer = tensorflow.train.GradientDescentOptimizer(learning_rate).minimize(cost)
 
 # Initialize the variables (i.e. assign their default value)
 init = tensorflow.global_variables_initializer()
+
+with tensorflow.Session() as sess:
+    sess.run(init)
+    # Training cycle
+    for epoch in range(training_epochs):
+        avg_cost = 0.
+        total_batch = int(len(inputData)/batch_size)
+        # Loop over all batches
+        for i in range(len(inputData)):
+            # Fit training using batch data
+            _, c = sess.run([optimizer, cost], feed_dict={x: [inputData[i]],
+                                                          y: [[out_data[i]]]})
+            # Compute average loss
+            avg_cost += c / total_batch
+        # Display logs per epoch step
+        if (epoch+1) % display_step == 0:
+            print("Epoch:", '%04d' % (epoch+1), "cost=", "{:.9f}".format(avg_cost))
+
+    print("Optimization Finished!")
+
+    # Test model
+    correct_prediction = tensorflow.equal(tensorflow.argmax(model, 1), tensorflow.argmax(y, 1))
+    print(correct_prediction)
+    # Calculate accuracy for 3000 examples
+    accuracy = tensorflow.reduce_mean(tensorflow.cast(correct_prediction, tensorflow.float32))
+    #print("Accuracy:", accuracy.eval({x: [inputData], y: [out_data]}))
+
 
 
 def plot_data(r0, r1):
@@ -56,5 +93,7 @@ def plot_data(r0, r1):
     plt.xlabel("$x_0$")
     plt.ylabel("$x_1$")
     plt.show()
+
+
 
 plot_data(r0,r1)
