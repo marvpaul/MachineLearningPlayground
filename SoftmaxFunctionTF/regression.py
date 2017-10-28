@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import tensorflow
 
 
-learning_rate = 1
 
 # class 0:
 # covariance matrix and mean
@@ -21,8 +20,8 @@ m1 = 100
 
 
 # Parameters
-learning_rate = 1
-training_epochs = 25
+learning_rate = 0.5
+training_epochs = 1000
 batch_size = 5
 display_step = 1
 
@@ -33,24 +32,26 @@ display_step = 1
 r0 = np.random.multivariate_normal(mean0, cov0, m0)
 r1 = np.random.multivariate_normal(mean1, cov1, m1)
 
-inputData = np.transpose(np.array([(r0[...,0][:95]) + (r1[...,0][:95]), (r0[...,1][:95] + (r1[...,1][:95]))]))
-
-out_data = np.append(np.ones(95), np.zeros(95))
+inputDataX1 = np.append(r0[...,0][:95], r1[...,0][:95])
+inputDataX2 = np.append(r0[...,1][:95], r1[...,1][:95])
+out_data = np.transpose([np.append(np.ones(95), np.zeros(95)), np.append(np.zeros(95), np.ones(95))])
 
 #out_trainingsdata = (r0[...,1][95:])(r1[...,1][95:])
 
 # Set model weights
 #Input, output
-W = tensorflow.Variable(tensorflow.zeros([2, 1]))
-b = tensorflow.Variable(tensorflow.zeros([1]))
+W1 = tensorflow.Variable(tensorflow.zeros([1, 2]))
+W2 = tensorflow.Variable(tensorflow.zeros([1, 2]))
+b = tensorflow.Variable(tensorflow.zeros([2]))
 
-x = tensorflow.placeholder(tensorflow.float32, [None, 2])
-y = tensorflow.placeholder(tensorflow.float32, [None, 1])
+x1 = tensorflow.placeholder(tensorflow.float32, [None, 1])
+x2 = tensorflow.placeholder(tensorflow.float32, [None, 1])
+y = tensorflow.placeholder(tensorflow.float32, [None, 2])
 
-model = tensorflow.nn.softmax(tensorflow.matmul(x, W) + b) # Softmax, logistic regression
+model = tensorflow.nn.softmax(tensorflow.add((tensorflow.matmul(x1, W1) + b), tensorflow.matmul(x2, W2) + b)) # Softmax, logistic regression
 
 # Minimize error using cross entropy without using LD2 log
-cost = tensorflow.reduce_mean(-tensorflow.reduce_sum(y*tensorflow.log(model), reduction_indices=1))
+cost = tensorflow.reduce_mean(-tensorflow.reduce_sum(y*tensorflow.log(model) + tensorflow.reduce_sum(tensorflow.abs(y - model)), reduction_indices=1))
 
 # Gradient Descent
 optimizer = tensorflow.train.GradientDescentOptimizer(learning_rate).minimize(cost)
@@ -63,12 +64,11 @@ with tensorflow.Session() as sess:
     # Training cycle
     for epoch in range(training_epochs):
         avg_cost = 0.
-        total_batch = int(len(inputData)/batch_size)
+        total_batch = int(len(inputDataX1)/batch_size)
         # Loop over all batches
-        for i in range(len(inputData)):
+        for i in range(len(inputDataX1)):
             # Fit training using batch data
-            _, c = sess.run([optimizer, cost], feed_dict={x: [inputData[i]],
-                                                          y: [[out_data[i]]]})
+            _, c = sess.run([optimizer, cost], feed_dict={x1: [[inputDataX1[i]]], x2: [[inputDataX2[i]]], y: [out_data[i]]})
             # Compute average loss
             avg_cost += c / total_batch
         # Display logs per epoch step
@@ -83,6 +83,9 @@ with tensorflow.Session() as sess:
     # Calculate accuracy for 3000 examples
     accuracy = tensorflow.reduce_mean(tensorflow.cast(correct_prediction, tensorflow.float32))
     #print("Accuracy:", accuracy.eval({x: [inputData], y: [out_data]}))
+
+    classification = sess.run(model, feed_dict={x1: inputDataX1, x2: inputDataX2})
+    print(classification)
 
 
 
