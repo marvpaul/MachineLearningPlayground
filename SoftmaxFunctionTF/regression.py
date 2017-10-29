@@ -25,13 +25,13 @@ r1 = np.random.multivariate_normal(mean1, cov1, m1)
 
 # Parameters for model training
 learning_rate = 0.1
-training_epochs = 10
+training_epochs = 100
 batch_size = 5
 display_step = 1
 
 #Transform the data for model training :)
-inputData = np.transpose([np.append(r0[...,0][:95], r1[...,0][:95]), np.append(r0[...,1][:95], r1[...,1][:95])])
-out_data = np.transpose([np.append(np.ones(95), np.zeros(95)), np.append(np.zeros(95), np.ones(95))])
+inputData = np.array(np.transpose([np.append(r0[...,0][:100], r1[...,0][:100]), np.append(r0[...,1][:100], r1[...,1][:100])]), dtype="float32")
+out_data = np.array(np.transpose([np.append(np.ones(100), np.zeros(100)), np.append(np.zeros(100), np.ones(100))]), dtype="float32")
 #inputDataX1 = np.append(r0[...,0][:95], r1[...,0][:95])
 #inputDataX2 = np.append(r0[...,1][:95], r1[...,1][:95])
 #out_trainingsdata = (r0[...,1][95:])(r1[...,1][95:])
@@ -51,12 +51,11 @@ model = tensorflow.nn.softmax(tensorflow.matmul(x, W) + b)
 #model = tensorflow.nn.softmax(tensorflow.add((tensorflow.matmul(x1, W1) + b), tensorflow.matmul(x2, W2) + b)) # Softmax, logistic regression
 
 # Minimize error using cross entropy with l2 regularization
-l2 = tensorflow.reduce_sum(tensorflow.pow(W, 2))
-cross_entropy = - tensorflow.reduce_mean(y * tensorflow.log(model + (1-y)*tensorflow.log(1-model)))
+l2 = tensorflow.reduce_sum(tensorflow.pow(y-model, 2))
+cross_entropy = tensorflow.nn.softmax_cross_entropy_with_logits(logits=model, labels=y)
 cost = cross_entropy + l2
 #cross_entropy = tensorflow.reduce_mean(- tensorflow.log(model)) + tensorflow.reduce_sum(- tensorflow.log(1 - model))
-#cross_entropy = tensorflow.nn.softmax_cross_entropy_with_logits(logits=inputData, labels=out_data)
-
+#cross_entropy = - tensorflow.reduce_mean(y * tensorflow.log(model + (1-y)*tensorflow.log(1-model)))
 
 # Using gradient descent as optimizer
 optimizer = tensorflow.train.GradientDescentOptimizer(learning_rate).minimize(cost)
@@ -79,7 +78,8 @@ with tensorflow.Session() as sess:
             avg_cost += c / total_batch
         # Display logs per epoch step
         if (epoch+1) % display_step == 0:
-            print("Epoch:", '%04d' % (epoch+1), "cost=", "{:.9f}".format(avg_cost))
+            #print("Epoch:", '%04d' % (epoch+1), "cost=", "{:.9f}".format(avg_cost))
+            print("Epoch", epoch+1, avg_cost)
 
     print("Optimization Finished!")
 
