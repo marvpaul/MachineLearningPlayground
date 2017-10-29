@@ -18,42 +18,47 @@ cov1 = np.array([[5,-3],[-3,3]])
 mean1 = np.array([1.,1])
 m1 = 100
 
-
-# Parameters
-learning_rate = 0.5
-training_epochs = 1000
-batch_size = 5
-display_step = 1
-
-
-
 # generate m0 gaussian distributed data points with
 # mean0 and cov0.
 r0 = np.random.multivariate_normal(mean0, cov0, m0)
 r1 = np.random.multivariate_normal(mean1, cov1, m1)
 
-inputDataX1 = np.append(r0[...,0][:95], r1[...,0][:95])
-inputDataX2 = np.append(r0[...,1][:95], r1[...,1][:95])
-out_data = np.transpose([np.append(np.ones(95), np.zeros(95)), np.append(np.zeros(95), np.ones(95))])
+# Parameters for model training
+learning_rate = 0.1
+training_epochs = 10
+batch_size = 5
+display_step = 1
 
+#Transform the data for model training :)
+inputData = np.transpose([np.append(r0[...,0][:95], r1[...,0][:95]), np.append(r0[...,1][:95], r1[...,1][:95])])
+out_data = np.transpose([np.append(np.ones(95), np.zeros(95)), np.append(np.zeros(95), np.ones(95))])
+#inputDataX1 = np.append(r0[...,0][:95], r1[...,0][:95])
+#inputDataX2 = np.append(r0[...,1][:95], r1[...,1][:95])
 #out_trainingsdata = (r0[...,1][95:])(r1[...,1][95:])
 
-# Set model weights
-#Input, output
-W1 = tensorflow.Variable(tensorflow.zeros([1, 2]))
-W2 = tensorflow.Variable(tensorflow.zeros([1, 2]))
-b = tensorflow.Variable(tensorflow.zeros([2]))
-
-x1 = tensorflow.placeholder(tensorflow.float32, [None, 1])
-x2 = tensorflow.placeholder(tensorflow.float32, [None, 1])
+#Defining some variables and placeholders for the tf model
+#W1 = tensorflow.Variable(tensorflow.zeros([1, 2]))
+#W2 = tensorflow.Variable(tensorflow.zeros([1, 2]))
+#x1 = tensorflow.placeholder(tensorflow.float32, [None, 1])
+#x2 = tensorflow.placeholder(tensorflow.float32, [None, 1])
 y = tensorflow.placeholder(tensorflow.float32, [None, 2])
+x = tensorflow.placeholder(tensorflow.float32, [None, 2])
+W = tensorflow.Variable(tensorflow.zeros([2, 2]))
+b = tensorflow.Variable(tensorflow.zeros([1]))
 
-model = tensorflow.nn.softmax(tensorflow.add((tensorflow.matmul(x1, W1) + b), tensorflow.matmul(x2, W2) + b)) # Softmax, logistic regression
+#The model
+model = tensorflow.nn.softmax(tensorflow.matmul(x, W) + b)
+#model = tensorflow.nn.softmax(tensorflow.add((tensorflow.matmul(x1, W1) + b), tensorflow.matmul(x2, W2) + b)) # Softmax, logistic regression
 
-# Minimize error using cross entropy without using LD2 log
-cost = tensorflow.reduce_mean(-tensorflow.reduce_sum(y*tensorflow.log(model) + tensorflow.reduce_sum(tensorflow.abs(y - model)), reduction_indices=1))
+# Minimize error using cross entropy with l2 regularization
+l2 = tensorflow.reduce_sum(tensorflow.pow(W, 2))
+cross_entropy = - tensorflow.reduce_mean(y * tensorflow.log(model + (1-y)*tensorflow.log(1-model)))
+cost = cross_entropy + l2
+#cross_entropy = tensorflow.reduce_mean(- tensorflow.log(model)) + tensorflow.reduce_sum(- tensorflow.log(1 - model))
+#cross_entropy = tensorflow.nn.softmax_cross_entropy_with_logits(logits=inputData, labels=out_data)
 
-# Gradient Descent
+
+# Using gradient descent as optimizer
 optimizer = tensorflow.train.GradientDescentOptimizer(learning_rate).minimize(cost)
 
 # Initialize the variables (i.e. assign their default value)
@@ -64,11 +69,12 @@ with tensorflow.Session() as sess:
     # Training cycle
     for epoch in range(training_epochs):
         avg_cost = 0.
-        total_batch = int(len(inputDataX1)/batch_size)
+        total_batch = int(len(inputData)/batch_size)
         # Loop over all batches
-        for i in range(len(inputDataX1)):
+        for i in range(len(inputData)):
             # Fit training using batch data
-            _, c = sess.run([optimizer, cost], feed_dict={x1: [[inputDataX1[i]]], x2: [[inputDataX2[i]]], y: [out_data[i]]})
+            #_, c = sess.run([optimizer, cost], feed_dict={x1: [[inputDataX1[i]]], x2: [[inputDataX2[i]]], y: [out_data[i]]})
+            _, c = sess.run([optimizer, cost], feed_dict={x: [inputData[i]], y: [out_data[i]]})
             # Compute average loss
             avg_cost += c / total_batch
         # Display logs per epoch step
@@ -82,9 +88,21 @@ with tensorflow.Session() as sess:
     print(correct_prediction)
     # Calculate accuracy for 3000 examples
     accuracy = tensorflow.reduce_mean(tensorflow.cast(correct_prediction, tensorflow.float32))
-    #print("Accuracy:", accuracy.eval({x: [inputData], y: [out_data]}))
+    print("Accuracy:", accuracy.eval({x: inputData, y: out_data}))
 
-    classification = sess.run(model, feed_dict={x1: inputDataX1, x2: inputDataX2})
+
+    '''arrayX1 = []
+    arrayX2 = []
+    for i in range(len(inputDataX1)):
+        arrayX1.append([inputDataX1[i]])
+        arrayX2.append(inputDataX2[i])'''
+
+    #classification = sess.run(model, feed_dict={x1: [[inputDataX1[1]]], x2: [[inputDataX2[1]]]})
+    classification = sess.run(model, feed_dict={x: [inputData[1]]})
+    print(classification)
+
+    #classification = sess.run(model, feed_dict={x1: [[inputDataX1[120]]], x2: [[inputDataX2[120]]]})
+    classification = sess.run(model, feed_dict={x: [inputData[120]]})
     print(classification)
 
 
@@ -96,7 +114,5 @@ def plot_data(r0, r1):
     plt.xlabel("$x_0$")
     plt.ylabel("$x_1$")
     plt.show()
-
-
 
 plot_data(r0,r1)
