@@ -26,21 +26,25 @@ r1 = np.random.multivariate_normal(mean1, cov1, m1)
 # Parameters for model training
 learning_rate = 0.1
 training_epochs = 100
-batch_size = 5
+batch_size = 20
 display_step = 1
 
 #Transform the data for model training :)
 inputData = np.array(np.transpose([np.append(r0[...,0][:100], r1[...,0][:100]), np.append(r0[...,1][:100], r1[...,1][:100])]), dtype="float32")
 out_data = np.array(np.transpose([np.append(np.ones(100), np.zeros(100)), np.append(np.zeros(100), np.ones(100))]), dtype="float32")
-#inputDataX1 = np.append(r0[...,0][:95], r1[...,0][:95])
-#inputDataX2 = np.append(r0[...,1][:95], r1[...,1][:95])
-#out_trainingsdata = (r0[...,1][95:])(r1[...,1][95:])
 
-#Defining some variables and placeholders for the tf model
-#W1 = tensorflow.Variable(tensorflow.zeros([1, 2]))
-#W2 = tensorflow.Variable(tensorflow.zeros([1, 2]))
-#x1 = tensorflow.placeholder(tensorflow.float32, [None, 1])
-#x2 = tensorflow.placeholder(tensorflow.float32, [None, 1])
+#Shuffle data
+data = []
+for i in range(len(inputData)):
+    data.append(np.append(inputData[i], out_data[i]))
+np.random.shuffle(data)
+inputData = []
+out_data = []
+for i in range(len(data)):
+    inputData.append(data[i][:2])
+    out_data.append(data[i][2:])
+
+#Define some placeholders and variables
 y = tensorflow.placeholder(tensorflow.float32, [None, 2])
 x = tensorflow.placeholder(tensorflow.float32, [None, 2])
 W = tensorflow.Variable(tensorflow.zeros([2, 2]))
@@ -52,8 +56,8 @@ model = tensorflow.nn.softmax(tensorflow.matmul(x, W) + b)
 
 # Minimize error using cross entropy with l2 regularization
 l2 = tensorflow.reduce_sum(tensorflow.pow(y-model, 2))
-cross_entropy = tensorflow.nn.softmax_cross_entropy_with_logits(logits=model, labels=y)
-cost = cross_entropy + l2
+cross_entropy = tensorflow.nn.softmax_cross_entropy_with_logits(logits=tensorflow.matmul(x, W) + b, labels=y)
+cost = cross_entropy  + l2
 #cross_entropy = tensorflow.reduce_mean(- tensorflow.log(model)) + tensorflow.reduce_sum(- tensorflow.log(1 - model))
 #cross_entropy = - tensorflow.reduce_mean(y * tensorflow.log(model + (1-y)*tensorflow.log(1-model)))
 
@@ -70,41 +74,36 @@ with tensorflow.Session() as sess:
         avg_cost = 0.
         total_batch = int(len(inputData)/batch_size)
         # Loop over all batches
-        for i in range(len(inputData)):
+        for i in range(total_batch):
             # Fit training using batch data
-            #_, c = sess.run([optimizer, cost], feed_dict={x1: [[inputDataX1[i]]], x2: [[inputDataX2[i]]], y: [out_data[i]]})
-            _, c = sess.run([optimizer, cost], feed_dict={x: [inputData[i]], y: [out_data[i]]})
+            x_batch = inputData[batch_size*i:batch_size*(i+1)]
+            y_batch = out_data[batch_size*i:batch_size*(i+1)]
+            _, c = sess.run([optimizer, cost], feed_dict={x: x_batch, y: y_batch})
             # Compute average loss
             avg_cost += c / total_batch
         # Display logs per epoch step
         if (epoch+1) % display_step == 0:
             #print("Epoch:", '%04d' % (epoch+1), "cost=", "{:.9f}".format(avg_cost))
-            print("Epoch", epoch+1, avg_cost)
+            print("Epoch", epoch+1, avg_cost[0])
 
     print("Optimization Finished!")
 
     # Test model
     correct_prediction = tensorflow.equal(tensorflow.argmax(model, 1), tensorflow.argmax(y, 1))
     print(correct_prediction)
-    # Calculate accuracy for 3000 examples
+    # Calculate accuracy for the trainings data
     accuracy = tensorflow.reduce_mean(tensorflow.cast(correct_prediction, tensorflow.float32))
     print("Accuracy:", accuracy.eval({x: inputData, y: out_data}))
 
-
-    '''arrayX1 = []
-    arrayX2 = []
-    for i in range(len(inputDataX1)):
-        arrayX1.append([inputDataX1[i]])
-        arrayX2.append(inputDataX2[i])'''
-
-    #classification = sess.run(model, feed_dict={x1: [[inputDataX1[1]]], x2: [[inputDataX2[1]]]})
-    classification = sess.run(model, feed_dict={x: [inputData[1]]})
-    print(classification)
-
-    #classification = sess.run(model, feed_dict={x1: [[inputDataX1[120]]], x2: [[inputDataX2[120]]]})
-    classification = sess.run(model, feed_dict={x: [inputData[120]]})
-    print(classification)
-
+    #Classify all trainings data and plot
+    classification = sess.run(model, feed_dict={x: inputData})
+    class1 = []
+    class2 = []
+    for pointNumber in range(len(classification)):
+        if classification[pointNumber][0] > classification[pointNumber][1]:
+            class1.append(inputData[pointNumber])
+        else:
+            class2.append(inputData[pointNumber])
 
 
 def plot_data(r0, r1):
@@ -115,4 +114,5 @@ def plot_data(r0, r1):
     plt.ylabel("$x_1$")
     plt.show()
 
-plot_data(r0,r1)
+plot_data(np.array(class1),np.array(class2))
+plot_data(r0, r1)
