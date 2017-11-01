@@ -4,6 +4,25 @@ import matplotlib.pyplot as plt
 import tensorflow
 
 
+'''
+Where r0 is a dataset which represents data from class 1, r1 dataset for class 2
+'''
+def preparingData(r0, r1):
+    #Transform the data for model training :)
+    inputData = np.array(np.transpose([np.append(r0[...,0][:100], r1[...,0][:100]), np.append(r0[...,1][:100], r1[...,1][:100])]), dtype="float32")
+    out_data = np.array(np.transpose([np.append(np.ones(100), np.zeros(100)), np.append(np.zeros(100), np.ones(100))]), dtype="float32")
+    #Shuffle data
+    data = []
+    for i in range(len(inputData)):
+        data.append(np.append(inputData[i], out_data[i]))
+    np.random.shuffle(data)
+    inputData = []
+    out_data = []
+    for i in range(len(data)):
+        inputData.append(data[i][:2])
+        out_data.append(data[i][2:])
+    return inputData, out_data
+
 
 # class 0:
 # covariance matrix and mean
@@ -23,26 +42,14 @@ m1 = 100
 r0 = np.random.multivariate_normal(mean0, cov0, m0)
 r1 = np.random.multivariate_normal(mean1, cov1, m1)
 
+#Preparing data
+inputData, out_data = preparingData(r0, r1)
+
 # Parameters for model training
-learning_rate = 0.1
-training_epochs = 100
+learning_rate = 0.0001
+training_epochs = 10000
 batch_size = 20
 display_step = 1
-
-#Transform the data for model training :)
-inputData = np.array(np.transpose([np.append(r0[...,0][:100], r1[...,0][:100]), np.append(r0[...,1][:100], r1[...,1][:100])]), dtype="float32")
-out_data = np.array(np.transpose([np.append(np.ones(100), np.zeros(100)), np.append(np.zeros(100), np.ones(100))]), dtype="float32")
-
-#Shuffle data
-data = []
-for i in range(len(inputData)):
-    data.append(np.append(inputData[i], out_data[i]))
-np.random.shuffle(data)
-inputData = []
-out_data = []
-for i in range(len(data)):
-    inputData.append(data[i][:2])
-    out_data.append(data[i][2:])
 
 #Define some placeholders and variables
 y = tensorflow.placeholder(tensorflow.float32, [None, 2])
@@ -52,14 +59,11 @@ b = tensorflow.Variable(tensorflow.zeros([1]))
 
 #The model
 model = tensorflow.nn.softmax(tensorflow.matmul(x, W) + b)
-#model = tensorflow.nn.softmax(tensorflow.add((tensorflow.matmul(x1, W1) + b), tensorflow.matmul(x2, W2) + b)) # Softmax, logistic regression
 
 # Minimize error using cross entropy with l2 regularization
 l2 = tensorflow.reduce_sum(tensorflow.pow(y-model, 2))
-cross_entropy = tensorflow.nn.softmax_cross_entropy_with_logits(logits=tensorflow.matmul(x, W) + b, labels=y)
-cost = cross_entropy  + l2
-#cross_entropy = tensorflow.reduce_mean(- tensorflow.log(model)) + tensorflow.reduce_sum(- tensorflow.log(1 - model))
-#cross_entropy = - tensorflow.reduce_mean(y * tensorflow.log(model + (1-y)*tensorflow.log(1-model)))
+cross_entropy = tensorflow.reduce_mean(tensorflow.nn.softmax_cross_entropy_with_logits(logits=tensorflow.matmul(x, W) + b, labels=y))
+cost = cross_entropy
 
 # Using gradient descent as optimizer
 optimizer = tensorflow.train.GradientDescentOptimizer(learning_rate).minimize(cost)
@@ -84,15 +88,13 @@ with tensorflow.Session() as sess:
         # Display logs per epoch step
         if (epoch+1) % display_step == 0:
             #print("Epoch:", '%04d' % (epoch+1), "cost=", "{:.9f}".format(avg_cost))
-            print("Epoch", epoch+1, avg_cost[0])
+            print("Epoch", epoch+1, avg_cost)
 
     print("Optimization Finished!")
 
-    # Test model
     correct_prediction = tensorflow.equal(tensorflow.argmax(model, 1), tensorflow.argmax(y, 1))
-    print(correct_prediction)
     # Calculate accuracy for the trainings data
-    accuracy = tensorflow.reduce_mean(tensorflow.cast(correct_prediction, tensorflow.float32))
+    accuracy = tensorflow.reduce_mean(tensorflow.cast(model, tensorflow.float32))
     print("Accuracy:", accuracy.eval({x: inputData, y: out_data}))
 
     #Classify all trainings data and plot
@@ -114,5 +116,24 @@ def plot_data(r0, r1):
     plt.ylabel("$x_1$")
     plt.show()
 
-plot_data(np.array(class1),np.array(class2))
-plot_data(r0, r1)
+#plot_data(np.array(class1),np.array(class2))
+#plot_data(r0, r1)
+#model = tensorflow.nn.softmax(tensorflow.add((tensorflow.matmul(x1, W1) + b), tensorflow.matmul(x2, W2) + b)) # Softmax, logistic regression
+#cross_entropy = tensorflow.reduce_mean(- tensorflow.log(model)) + tensorflow.reduce_sum(- tensorflow.log(1 - model))
+#cross_entropy = - tensorflow.reduce_mean(y * tensorflow.log(model + (1-y)*tensorflow.log(1-model)))
+
+# Test model
+
+#print(correct_prediction)
+
+'''
+    for i in range(len(classification)):
+        classification[i][0] = int(round(classification[i][0]))
+        classification[i][1] = int(round(classification[i][1]))
+    print("Break")
+    counter = 0
+    for i in range(len(classification)):
+        if (classification[i]==out_data[i]).all():
+            counter += 1
+    print(counter)
+'''

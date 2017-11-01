@@ -220,6 +220,10 @@ print('Got %d / %d correct => accuracy: %f' % (num_correct, num_test, accuracy))
 num_folds = 5
 k_choices = [1, 3, 5, 8, 10, 12, 15, 20, 50, 100]
 
+
+#Just for debug purposes
+X_train = X_train[:200]
+y_train = y_train[:200]
 X_train_folds = []
 y_train_folds = []
 ################################################################################
@@ -230,8 +234,10 @@ y_train_folds = []
 #                                                                              #
 # Hint: Look up the numpy array_split function.                                #
 ################################################################################
-X_train_folds = np.array_split(X_train, [int(len(X_train)/num_folds*4), len(X_train)-1])
-y_train_folds = np.array_split(y_train, [int(len(X_train)/num_folds*4), len(X_train)-1] )
+#X_train_folds = np.array_split(X_train, [int(len(X_train)/num_folds*4), len(X_train)-1])
+#y_train_folds = np.array_split(y_train, [int(len(X_train)/num_folds*4), len(X_train)-1] )
+X_train_folds = np.array_split(X_train, 5)
+y_train_folds = np.array_split(y_train, 5)
 ################################################################################
 #                                 END OF YOUR CODE                             #
 ################################################################################
@@ -250,24 +256,30 @@ k_to_accuracies = {}
 # last fold as a validation set. Store the accuracies for all fold and all     #
 # values of k in the k_to_accuracies dictionary.                               #
 ################################################################################
-X_val = X_train_folds[1]
-y_val = y_train_folds[1]
-X_train = X_train_folds[0]
-Y_train = y_train_folds[0]
+
 
 for k in k_choices:
-    classifier = KNearestNeighbor()
-    classifier.train(X_train, y_train)
-    dists = classifier.compute_distances_with_loops(X_test)
-    y_test_pred = classifier.predict_labels(dists,k)
-    accuracy = float(np.sum(y_test_pred == y_test)) / len(X_val)
-    k_to_accuracies.update({k : accuracy})
-    #TODO: Make some more loops :O
+    accuracies = []
+    for i in range(num_folds):
+        #Create trainingsdata
+        X_val = X_train_folds.pop(i)
+        y_val = y_train_folds.pop(i)
+        X_train_data = np.array([i for j in X_train_folds for i in j])
+        Y_train_data = np.array([i for j in y_train_folds for i in j])
+
+        classifier = KNearestNeighbor()
+        classifier.train(X_train_data, Y_train_data)
+        dists = classifier.compute_distances_with_loops(X_val)
+        y_test_pred = classifier.predict_labels(dists,k)
+        accuracy = float(np.sum(y_test_pred == y_val)) / len(X_val)
+
+        X_train_folds = np.array_split(X_train, 5)
+        y_train_folds = np.array_split(y_train, 5)
+        accuracies.append(accuracy)
+    k_to_accuracies.update({k : accuracies})
 ################################################################################
 #                                 END OF YOUR CODE                             #
 ################################################################################
-for k in sorted(k_to_accuracies):
-        print('k = %d, accuracy = %f' % (k, k_to_accuracies))
 # Print out the computed accuracies
 for k in sorted(k_to_accuracies):
     for accuracy in k_to_accuracies[k]:
