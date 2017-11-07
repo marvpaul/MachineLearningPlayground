@@ -73,22 +73,9 @@ optimizer = tensorflow.train.GradientDescentOptimizer(learning_rate).minimize(co
 sess = tensorflow.Session()
 init = tensorflow.global_variables_initializer()
 sess.run(init)
-'''
-num_epochs = 10000
-for i in range(num_epochs):
-    # run an optimization step with all train data
-    c = sess.run(optimizer, feed_dict={x: inputData, y: out_data})
-    print(c)
-    # thus, a symbolic variable X gets data from train_X, while Y gets data from train_Y
 
-# Now assess the model
-# create a variable which reflects how good your predictions are
-# here we just compare if the predicted label and the real label are the same
-accuracy = tensorflow.reduce_mean(tensorflow.cast(tensorflow.equal(tensorflow.argmax(model,1), tensorflow.argmax(y,1)), "float"))
-# and finally, run calculations with all test data
-accuracy_value = sess.run(accuracy, feed_dict={x:inputData, y:out_data})
-print(accuracy_value)
-'''
+bias = 0;
+weight = 0;
 cost_data = [[],[]]
 with tensorflow.Session() as sess:
     sess.run(init)
@@ -106,7 +93,6 @@ with tensorflow.Session() as sess:
             avg_cost += c / total_batch
         # Display logs per epoch step
         if (epoch+1) % display_step == 0:
-            #print("Epoch:", '%04d' % (epoch+1), "cost=", "{:.9f}".format(avg_cost))
             print("Epoch", epoch+1, avg_cost)
             cost_data[0].append(epoch+1)
             cost_data[1].append(avg_cost)
@@ -117,40 +103,39 @@ with tensorflow.Session() as sess:
     accuracy = tensorflow.reduce_mean(tensorflow.cast(tensorflow.equal(tensorflow.argmax(model,1), tensorflow.argmax(y,1)), "float"))
     print("Accuracy:", accuracy.eval({x: inputData, y: out_data}))
 
-    #Classify all trainings data and plot
-    classification = sess.run(model, feed_dict={x: inputData})
-    class1 = []
-    class2 = []
-    for pointNumber in range(len(classification)):
-        if classification[pointNumber][0] > classification[pointNumber][1]:
-            class1.append(inputData[pointNumber])
-        else:
-            class2.append(inputData[pointNumber])
+    weight = sess.run(W)
+    bias = sess.run(b)
+    print(print("W: ", weight))
+    print(print("Bias: ", bias))
 
 
-def plot_data(r0, r1):
+def plot_data_and_bounday():
+    #Calculate and plot the decision boundary :)
+    x_values = [item[0] for item in inputData]
+    x_decision_bound = np.linspace(min(x_values), max(x_values))
+    y_decision_bound = (-bias[0] - weight[:,0][0]*x_decision_bound) / weight[:,0][1]
     plt.figure(figsize=(7.,7.))
     plt.scatter(r0[...,0], r0[...,1], c='b', marker='o', label="Klasse 0")
     plt.scatter(r1[...,0], r1[...,1], c='r', marker='x', label="Klasse 1")
+    plt.plot(x_decision_bound, y_decision_bound)
     plt.xlabel("$x_0$")
     plt.ylabel("$x_1$")
-    plt.show()
 
-plt.figure(1)
-plt.subplot(111)
-plt.plot(cost_data[0], cost_data[1])
-plt.xlabel("# of iterations / epochs")
-plt.ylabel("costs")
-plt.title("Learning progress")
-#plot_data(np.array(class1),np.array(class2))
-plot_data(r0, r1, )
-#model = tensorflow.nn.softmax(tensorflow.add((tensorflow.matmul(x1, W1) + b), tensorflow.matmul(x2, W2) + b)) # Softmax, logistic regression
-#cross_entropy = tensorflow.reduce_mean(- tensorflow.log(model)) + tensorflow.reduce_sum(- tensorflow.log(1 - model))
-#cross_entropy = - tensorflow.reduce_mean(y * tensorflow.log(model + (1-y)*tensorflow.log(1-model)))
+def plot_costs_per_iteration():
+    #Plot costs per iteration
+    plt.figure(2)
+    plt.subplot(111)
+    plt.plot(cost_data[0], cost_data[1])
+    plt.xlabel("# of iterations / epochs")
+    plt.ylabel("costs")
+    plt.title("Learning progress")
 
-# Test model
+plot_data_and_bounday()
 
-#print(correct_prediction)
+plot_costs_per_iteration()
+
+plt.show()
+
 
 '''
     for i in range(len(classification)):
@@ -162,4 +147,15 @@ plot_data(r0, r1, )
         if (classification[i]==out_data[i]).all():
             counter += 1
     print(counter)
+    
+    
+    #Classify all trainings data and plot
+    classification = sess.run(model, feed_dict={x: inputData})
+    class1 = []
+    class2 = []
+    for pointNumber in range(len(classification)):
+        if classification[pointNumber][0] > classification[pointNumber][1]:
+            class1.append(inputData[pointNumber])
+        else:
+            class2.append(inputData[pointNumber])
 '''
