@@ -46,8 +46,8 @@ r1 = np.random.multivariate_normal(mean1, cov1, m1)
 inputData, out_data = preparingData(r0, r1)
 
 # Parameters for model training
-learning_rate = 0.0001
-training_epochs = 10000
+learning_rate = 0.01
+training_epochs = 100
 batch_size = 20
 display_step = 1
 
@@ -55,22 +55,41 @@ display_step = 1
 y = tensorflow.placeholder(tensorflow.float32, [None, 2])
 x = tensorflow.placeholder(tensorflow.float32, [None, 2])
 W = tensorflow.Variable(tensorflow.zeros([2, 2]))
-b = tensorflow.Variable(tensorflow.zeros([1]))
+b = tensorflow.Variable(tensorflow.zeros([2]))
 
 #The model
 model = tensorflow.nn.softmax(tensorflow.matmul(x, W) + b)
 
 # Minimize error using cross entropy with l2 regularization
 l2 = tensorflow.reduce_sum(tensorflow.pow(y-model, 2))
-cross_entropy = tensorflow.reduce_mean(tensorflow.nn.softmax_cross_entropy_with_logits(logits=tensorflow.matmul(x, W) + b, labels=y))
-cost = cross_entropy
+cross_entropy = tensorflow.reduce_mean(tensorflow.nn.softmax_cross_entropy_with_logits(logits=model, labels=y))
+cost = cross_entropy + l2
 
 # Using gradient descent as optimizer
 optimizer = tensorflow.train.GradientDescentOptimizer(learning_rate).minimize(cost)
 
-# Initialize the variables (i.e. assign their default value)
-init = tensorflow.global_variables_initializer()
 
+# Create and initialize a session
+sess = tensorflow.Session()
+init = tensorflow.global_variables_initializer()
+sess.run(init)
+'''
+num_epochs = 10000
+for i in range(num_epochs):
+    # run an optimization step with all train data
+    c = sess.run(optimizer, feed_dict={x: inputData, y: out_data})
+    print(c)
+    # thus, a symbolic variable X gets data from train_X, while Y gets data from train_Y
+
+# Now assess the model
+# create a variable which reflects how good your predictions are
+# here we just compare if the predicted label and the real label are the same
+accuracy = tensorflow.reduce_mean(tensorflow.cast(tensorflow.equal(tensorflow.argmax(model,1), tensorflow.argmax(y,1)), "float"))
+# and finally, run calculations with all test data
+accuracy_value = sess.run(accuracy, feed_dict={x:inputData, y:out_data})
+print(accuracy_value)
+'''
+cost_data = [[],[]]
 with tensorflow.Session() as sess:
     sess.run(init)
     # Training cycle
@@ -89,12 +108,13 @@ with tensorflow.Session() as sess:
         if (epoch+1) % display_step == 0:
             #print("Epoch:", '%04d' % (epoch+1), "cost=", "{:.9f}".format(avg_cost))
             print("Epoch", epoch+1, avg_cost)
+            cost_data[0].append(epoch+1)
+            cost_data[1].append(avg_cost)
 
     print("Optimization Finished!")
 
-    correct_prediction = tensorflow.equal(tensorflow.argmax(model, 1), tensorflow.argmax(y, 1))
     # Calculate accuracy for the trainings data
-    accuracy = tensorflow.reduce_mean(tensorflow.cast(model, tensorflow.float32))
+    accuracy = tensorflow.reduce_mean(tensorflow.cast(tensorflow.equal(tensorflow.argmax(model,1), tensorflow.argmax(y,1)), "float"))
     print("Accuracy:", accuracy.eval({x: inputData, y: out_data}))
 
     #Classify all trainings data and plot
@@ -116,8 +136,14 @@ def plot_data(r0, r1):
     plt.ylabel("$x_1$")
     plt.show()
 
+plt.figure(1)
+plt.subplot(111)
+plt.plot(cost_data[0], cost_data[1])
+plt.xlabel("# of iterations / epochs")
+plt.ylabel("costs")
+plt.title("Learning progress")
 #plot_data(np.array(class1),np.array(class2))
-#plot_data(r0, r1)
+plot_data(r0, r1, )
 #model = tensorflow.nn.softmax(tensorflow.add((tensorflow.matmul(x1, W1) + b), tensorflow.matmul(x2, W2) + b)) # Softmax, logistic regression
 #cross_entropy = tensorflow.reduce_mean(- tensorflow.log(model)) + tensorflow.reduce_sum(- tensorflow.log(1 - model))
 #cross_entropy = - tensorflow.reduce_mean(y * tensorflow.log(model + (1-y)*tensorflow.log(1-model)))
