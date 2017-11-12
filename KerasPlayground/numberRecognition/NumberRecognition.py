@@ -1,4 +1,4 @@
-#Copied from: https://www.analyticsvidhya.com/blog/2016/10/tutorial-optimizing-neural-networks-using-keras-with-image-recognition-case-study/#
+#Datasource: https://www.analyticsvidhya.com/blog/2016/10/tutorial-optimizing-neural-networks-using-keras-with-image-recognition-case-study/#
 import numpy as np
 import pandas as pd
 import os
@@ -49,7 +49,7 @@ def create_model():
     return modelK
 
 #Read and process data
-images, classes = getData(1200, "data/train.csv")
+images, classes = getData(48999, "data/train.csv")
 
 
 
@@ -59,7 +59,7 @@ if os.path.isfile("model.keras"):
 else:
     model = create_model()
     # Fit the model
-    model.fit(images, classes, epochs=500, batch_size=100)
+    model.fit(images, classes, epochs=50, batch_size=100)
     model.save("model.keras")
 
 #
