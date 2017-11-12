@@ -149,7 +149,7 @@ def plotSampleImages(images, labels):
         image_number = 0
     plt.show()
 
-#plotSampleImages(X_train, y_train)
+plotSampleImages(X_train, y_train)
 #####################################################################
 #                       END OF YOUR CODE                            #
 #####################################################################
@@ -197,20 +197,20 @@ dists = classifier.compute_distances_with_loops(X_test)
 print(dists.shape) # Should be: (500, 5000)
 
 
-#dists_vec = classifier.compute_distances_vectorized(X_test)
+dists_vec = classifier.compute_distances_vectorized(X_test)
 # This task is not vital for the notebook. Run that cell only if you have implement the vectorized function
 
 
 # check that the distance matrix agrees with the one we computed before:
-'''difference = np.linalg.norm(dists - dists_vec, ord='fro')
+difference = np.linalg.norm(dists - dists_vec, ord='fro')
 print('Difference was: %f' % (difference, ))
 if difference < 0.001:
     print('Good! The distance matrices are the same')
 else:
     print('Uh-oh! The distance matrices are different')
-'''
+
 # Before running this cell: implement the function predict_labels
-y_test_pred = classifier.predict_labels(dists,1)
+y_test_pred = classifier.predict_labels(dists, 1)
 
 # Compute and print the fraction of correctly predicted examples
 num_correct = np.sum(y_test_pred == y_test)
@@ -227,15 +227,13 @@ y_train = y_train[:200]
 X_train_folds = []
 y_train_folds = []
 ################################################################################
-# TODO (2):                                                                        #
+# TODO (2):                                                                    #
 # Split up the training data into folds. After splitting, X_train_folds and    #
 # y_train_folds should each be lists of length num_folds, where                #
 # y_train_folds[i] is the label vector for the points in X_train_folds[i].     #
 #                                                                              #
 # Hint: Look up the numpy array_split function.                                #
 ################################################################################
-#X_train_folds = np.array_split(X_train, [int(len(X_train)/num_folds*4), len(X_train)-1])
-#y_train_folds = np.array_split(y_train, [int(len(X_train)/num_folds*4), len(X_train)-1] )
 X_train_folds = np.array_split(X_train, 5)
 y_train_folds = np.array_split(y_train, 5)
 ################################################################################

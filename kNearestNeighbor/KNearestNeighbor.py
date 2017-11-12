@@ -1,4 +1,5 @@
 import numpy as np
+import lineare_algebra as math_helpers
 
 class KNearestNeighbor(object):
     """ a kNN classifier with Euclidean distance """
@@ -120,20 +121,10 @@ class KNearestNeighbor(object):
         # Hint: Try to formulate the Euclidean distance using matrix            #
         #       multiplication and two broadcast sums.                          #
         #########################################################################
-        #http://nonconditional.com/2014/04/on-the-trick-for-computing-the-squared-euclidian-distances-between-two-sets-of-vectors/
-        #Using dot product?
-        #X_square = list(map(sum, X*X))
-        #Y_square = list(map(sum, self.X_train*self.X_train))
-        X_brod = np.broadcast_to(X, (len(self.X_train), len(X), 3072))
-        Y_brod = np.broadcast_to(self.X_train, (len(X), len(self.X_train), 3072))
+        transposed_data = math_helpers.matrix_transpose(self.X_train)
 
-
-
-
-
-        #dists = np.subtract(np.transpose(np.add(X_brod, Y_brod)), 2*np.dot(X, (np.transpose(self.X_train))))
-        dists = np.sum(np.abs(np.subtract(X_brod, np.transpose(Y_brod, axes=(1, 0, 2)))), axis=2)
-        #TODO: Continue here :)
+        #https://medium.com/dataholiks-distillery/l2-distance-matrix-vectorization-trick-26aa3247ac6c
+        dists = -2 * np.dot(X, transposed_data) + np.sum(self.X_train**2, axis=1) + np.sum(X**2, axis=1)[:, np.newaxis]
         #########################################################################
         #                         END OF YOUR CODE                              #
         #########################################################################
