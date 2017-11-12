@@ -6,7 +6,7 @@ import PIL.Image as Image
 
 from keras.models import Sequential
 from keras.models import load_model
-from keras.layers import Dense, Dropout, Activation, Flatten, Convolution2D, MaxPooling2D, Conv2D
+from keras.layers import Dense, Dropout, Flatten, MaxPooling2D, Conv2D
 import matplotlib.pyplot as plt
 
 def getData(number_img, csv_path):
@@ -48,34 +48,33 @@ def create_model():
                   metrics=['accuracy'])
     return modelK
 
+#Read and process data
 images, classes = getData(1200, "data/train.csv")
 
 
 
-
+#Check if keras model exists. In case it exists, just run prediction, otherwise create, train and save a new model
 if os.path.isfile("model.keras"):
     model = load_model("model.keras")
 else:
     model = create_model()
     # Fit the model
-    model.fit(images, classes, epochs=100, batch_size=100)
+    model.fit(images, classes, epochs=500, batch_size=100)
     model.save("model.keras")
 
-train_images = images[1000:1040]
-train_labels = classes[1000:1040]
-predictions = model.predict(train_images)
+#
+test_images = images[1000:1060]
+predictions = model.predict(test_images)
 
 numbers = []
 for pred in predictions:
     numbers.append(np.argmax(pred))
-print(numbers)
 
 
 def plotSampleImages(images, labels):
     image_data_sorted = [[],[],[],[],[],[],[],[],[],[]]
     for i in range(len(labels)):
-        label_nr = np.argmax(labels[i])
-        image_data_sorted[label_nr].append(images[i])
+        image_data_sorted[labels[i]].append(images[i])
     fig, axes = plt.subplots(nrows=15, ncols=10)
     for image_class in range(10):
         axes[0, image_class].set_title(image_class)
@@ -85,7 +84,7 @@ def plotSampleImages(images, labels):
 
     plt.show()
 
-plotSampleImages(train_images, train_labels)
+plotSampleImages(test_images, numbers)
 
 
 
