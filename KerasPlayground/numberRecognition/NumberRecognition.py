@@ -7,6 +7,7 @@ import PIL.Image as Image
 from keras.models import Sequential
 from keras.models import load_model
 from keras.layers import Dense, Dropout, Activation, Flatten, Convolution2D, MaxPooling2D, Conv2D
+import matplotlib.pyplot as plt
 
 def getData(number_img, csv_path):
     data = pd.read_csv(csv_path)
@@ -47,7 +48,10 @@ def create_model():
                   metrics=['accuracy'])
     return modelK
 
-images, classes = getData(1000, "data/train.csv")
+images, classes = getData(1200, "data/train.csv")
+
+
+
 
 if os.path.isfile("model.keras"):
     model = load_model("model.keras")
@@ -57,6 +61,31 @@ else:
     model.fit(images, classes, epochs=100, batch_size=100)
     model.save("model.keras")
 
+train_images = images[1000:1040]
+train_labels = classes[1000:1040]
+predictions = model.predict(train_images)
+
+numbers = []
+for pred in predictions:
+    numbers.append(np.argmax(pred))
+print(numbers)
+
+
+def plotSampleImages(images, labels):
+    image_data_sorted = [[],[],[],[],[],[],[],[],[],[]]
+    for i in range(len(labels)):
+        label_nr = np.argmax(labels[i])
+        image_data_sorted[label_nr].append(images[i])
+    fig, axes = plt.subplots(nrows=15, ncols=10)
+    for image_class in range(10):
+        axes[0, image_class].set_title(image_class)
+        for image in range(len(image_data_sorted[image_class])):
+            axes[image, image_class].axis('off')
+            axes[image, image_class].imshow((image_data_sorted[image_class][image])/255)
+
+    plt.show()
+
+plotSampleImages(train_images, train_labels)
 
 
 
