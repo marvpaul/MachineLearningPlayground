@@ -1,4 +1,4 @@
-#Datasource: https://www.analyticsvidhya.com/blog/2016/10/tutorial-optimizing-neural-networks-using-keras-with-image-recognition-case-study/#
+#Datasource:http://yann.lecun.com/exdb/mnist/
 import numpy as np
 import pandas as pd
 import os
@@ -10,18 +10,23 @@ from keras.layers import Dense, Dropout, Flatten, MaxPooling2D, Conv2D
 import matplotlib.pyplot as plt
 
 def getData(number_img, csv_path):
+    '''
+    Read images, and save to array
+    :param number_img: the number of images to load
+    :param csv_path: the path for CSV in which the image paths are stored
+    :return: image_array, classes_array
+    '''
     data = pd.read_csv(csv_path)
 
     image_paths = data['filename'][:number_img]
-    classes = data['label'][:number_img]
-    classes_vecs = []
-    for class_nr in classes:
-        class_vec = np.zeros(10)
-        class_vec[class_nr] = 1
-        classes_vecs.append(class_vec)
-    classes_vecs = np.array(classes_vecs)
-    images = []
 
+    #Create class vectors with following shape: [0,0,0,0,0,0,0,0,0,1] --> Represents class for number 9
+    classes = data['label'][:number_img]
+    classes_vecs = np.array([np.zeros(10) for classes in classes])
+    for class_nr in range(len(classes)):
+        classes_vecs[class_nr][classes[class_nr]] = 1
+
+    images = []
     for i in range(len(image_paths)):
         path = os.path.join('data/Images/train', image_paths[i])
         img = Image.open(path).convert('RGBA')
@@ -32,6 +37,7 @@ def getData(number_img, csv_path):
     return images, classes_vecs
 
 def create_model():
+    '''Create a keras model with some conv layers'''
     modelK = Sequential([
         Conv2D(32, (3, 3), activation="relu", input_shape=images[0].shape),
         Conv2D(32, (3, 3), activation="relu"),
@@ -49,7 +55,7 @@ def create_model():
     return modelK
 
 #Read and process data
-images, classes = getData(48999, "data/train.csv")
+images, classes = getData(1500, "data/train.csv")
 
 
 
@@ -58,13 +64,14 @@ if os.path.isfile("model.keras"):
     model = load_model("model.keras")
 else:
     model = create_model()
+
     # Fit the model
     model.fit(images, classes, epochs=50, batch_size=100)
     model.save("model.keras")
 
-#
 test_images = images[1000:1060]
-predictions = model.predict(test_images)
+#Lets make some predictions :)
+predictions = model.predict(np.array(test_images))
 
 numbers = []
 for pred in predictions:
@@ -72,6 +79,12 @@ for pred in predictions:
 
 
 def plotSampleImages(images, labels):
+    '''
+    Plot all predicted numbers
+    :param images: the images to plot
+    :param labels: the labels which were predicted
+    :return: nothing :O
+    '''
     image_data_sorted = [[],[],[],[],[],[],[],[],[],[]]
     for i in range(len(labels)):
         image_data_sorted[labels[i]].append(images[i])
@@ -88,3 +101,22 @@ plotSampleImages(test_images, numbers)
 
 
 
+'''
+Code for parsing some self drawn images :) 
+test_images = []
+img = Image.open('data/Images/own/Unbenannt-1.png').convert('RGBA')
+arr = np.array(img)
+test_images.append(arr)
+
+img = Image.open('data/Images/own/Unbenannt-2.png').convert('RGBA')
+arr = np.array(img)
+test_images.append(arr)
+
+img = Image.open('data/Images/own/Unbenannt-3.png').convert('RGBA')
+arr = np.array(img)
+test_images.append(arr)
+
+img = Image.open('data/Images/own/Unbenannt-4.png').convert('RGBA')
+arr = np.array(img)
+test_images.append(arr)
+'''

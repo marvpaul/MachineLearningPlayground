@@ -7,9 +7,6 @@ import os
 import pickle
 import matplotlib.pyplot as plt
 from KNearestNeighbor import KNearestNeighbor
-
-
-
 from scipy._lib.six import xrange
 
 plt.rcParams['figure.figsize'] = (10.0, 8.0) # set default size of plots
@@ -149,19 +146,19 @@ def plotSampleImages(images, labels):
         image_number = 0
     plt.show()
 
-plotSampleImages(X_train, y_train)
+
 #####################################################################
 #                       END OF YOUR CODE                            #
 #####################################################################
 
 # Subsample trainings data
-num_training = 5000 #5000
+num_training = 5000
 mask = range(num_training)
 X_train = X_train[mask]
 y_train = y_train[mask]
 
 # Subsample test data
-num_test = 50 #500
+num_test = 500
 mask = range(num_test)
 X_test = X_test[mask]
 y_test = y_test[mask]
@@ -220,12 +217,6 @@ print('Got %d / %d correct => accuracy: %f' % (num_correct, num_test, accuracy))
 num_folds = 5
 k_choices = [1, 3, 5, 8, 10, 12, 15, 20, 50, 100]
 
-
-#Just for debug purposes
-X_train = X_train[:200]
-y_train = y_train[:200]
-X_train_folds = []
-y_train_folds = []
 ################################################################################
 # TODO (2):                                                                    #
 # Split up the training data into folds. After splitting, X_train_folds and    #
@@ -282,3 +273,7 @@ for k in k_choices:
 for k in sorted(k_to_accuracies):
     for accuracy in k_to_accuracies[k]:
         print('k = %d, accuracy = %f' % (k, accuracy))
+
+#Aufruf des Plottes muss bei mir am Ende stehen, sonst pausiert mein Programm solange die weitere Ausführung, bis ich das Plot
+#Fenster wieder geschlossen habe.
+plotSampleImages(X_train, y_train)

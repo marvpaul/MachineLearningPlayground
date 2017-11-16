@@ -76,7 +76,7 @@ def create_random_matrix(n, m):
     #####################################################################
     matrix = []
     for i in range(n):
-        matrix.append(random.sample(range(255), m))
+        matrix.append(random.sample(range(256), m))
     return matrix
 
 

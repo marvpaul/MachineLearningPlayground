@@ -86,8 +86,7 @@ class KNearestNeighbor(object):
         #####################################################################
         for i in range(num_test):
             for j in range(num_train):
-                    dists[i, j] = np.sum(np.abs(np.subtract(self.X_train[j], X[i])))
-            print(str(i) + 'th image distances calculated')
+                dists[i, j] = np.sqrt(sum(pow(self.X_train[j,:] - X[i,:],2)))
         #####################################################################
         #                       END OF YOUR CODE                            #
         #####################################################################
@@ -121,10 +120,14 @@ class KNearestNeighbor(object):
         # Hint: Try to formulate the Euclidean distance using matrix            #
         #       multiplication and two broadcast sums.                          #
         #########################################################################
-        transposed_data = math_helpers.matrix_transpose(self.X_train)
+        x_pow = np.sum(pow(X, 2), axis=1)[:]
+        broadcast_x_pow = []
+        for i in x_pow:
+            broadcast_x_pow.append([i])
 
-        #https://medium.com/dataholiks-distillery/l2-distance-matrix-vectorization-trick-26aa3247ac6c
-        dists = -2 * np.dot(X, transposed_data) + np.sum(self.X_train**2, axis=1) + np.sum(X**2, axis=1)[:, np.newaxis]
+        x_train_pow = np.sum(pow(self.X_train, 2), axis=1)[:]
+
+        dists = np.sqrt(broadcast_x_pow + x_train_pow - 2 * X.dot(np.transpose(self.X_train)))
         #########################################################################
         #                         END OF YOUR CODE                              #
         #########################################################################
@@ -160,7 +163,7 @@ class KNearestNeighbor(object):
             k_nearest_training_image_indexes = np.argsort(dists[i])[0:k]
             for index in k_nearest_training_image_indexes:
                 closest_y.append(self.y_train[index])
-            print(str(i) + 'images analyzed :)')
+            #print(str(i) + 'images analyzed :)')
             #########################################################################
             # TODO (2):                                                             #
             # Now that you have found the labels of the k nearest neighbors, you    #
