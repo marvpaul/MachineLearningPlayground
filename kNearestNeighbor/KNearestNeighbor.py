@@ -177,3 +177,10 @@ class KNearestNeighbor(object):
             #                           END OF YOUR CODE                            #
             #########################################################################
         return y_pred
+
+    def get_k_nearest(self, k, dists, train_img_index):
+        closest_y = []
+        k_nearest_training_image_indexes = np.argsort(dists[train_img_index])[0:k]
+        for index in k_nearest_training_image_indexes:
+            closest_y.append(self.X_train[index])
+        return closest_y

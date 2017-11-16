@@ -144,8 +144,7 @@ def plotSampleImages(images, labels):
             image_number += 1
         class_number += 1
         image_number = 0
-    plt.show()
-
+plotSampleImages(X_train, y_train)
 
 #####################################################################
 #                       END OF YOUR CODE                            #
@@ -189,6 +188,7 @@ classifier.train(X_train, y_train)
 
 # Before running this cell: open `ak1163051/k_nearest_neighbor.py` and 'implement compute_distances_with_loops`
 
+
 # Compute the distance between the test data and trainings data
 dists = classifier.compute_distances_with_loops(X_test)
 print(dists.shape) # Should be: (500, 5000)
@@ -213,6 +213,13 @@ y_test_pred = classifier.predict_labels(dists, 1)
 num_correct = np.sum(y_test_pred == y_test)
 accuracy = float(num_correct) / num_test
 print('Got %d / %d correct => accuracy: %f' % (num_correct, num_test, accuracy))
+
+
+y_test_pred = classifier.predict_labels(dists, k=5)
+num_correct = np.sum(y_test_pred == y_test)
+accuracy = float(num_correct) / num_test
+print('Got %d / %d correct => accuracy: %f' % (num_correct, num_test, accuracy))
+
 
 num_folds = 5
 k_choices = [1, 3, 5, 8, 10, 12, 15, 20, 50, 100]
@@ -258,9 +265,14 @@ for k in k_choices:
 
         classifier = KNearestNeighbor()
         classifier.train(X_train_data, Y_train_data)
-        dists = classifier.compute_distances_with_loops(X_val)
+        dists = classifier.compute_distances_vectorized(X_val)
         y_test_pred = classifier.predict_labels(dists,k)
-        accuracy = float(np.sum(y_test_pred == y_val)) / len(X_val)
+
+        accuracy = 0
+        for i in range(len(y_test_pred)):
+            if(y_test_pred[i] == y_val[i]):
+                accuracy = accuracy + 1
+        accuracy = accuracy / len(y_test_pred)
 
         X_train_folds = np.array_split(X_train, 5)
         y_train_folds = np.array_split(y_train, 5)
@@ -274,6 +286,93 @@ for k in sorted(k_to_accuracies):
     for accuracy in k_to_accuracies[k]:
         print('k = %d, accuracy = %f' % (k, accuracy))
 
-#Aufruf des Plottes muss bei mir am Ende stehen, sonst pausiert mein Programm solange die weitere Ausführung, bis ich das Plot
-#Fenster wieder geschlossen habe.
-plotSampleImages(X_train, y_train)
+
+################################################################################
+# TODO (2):                                                                    #
+# Create an scatter plot for each k in k_choices that plots the accuracies.    #
+# Calculate the mean and standard deviation for the accuracies of each k and   #
+# add them to the plot.                                                        #
+#                                                                              #
+# Hint: Numpy provides mean() and std() as functions, use them. You can either #
+#       use matplotlibs errorbar function to plot the mean and standard        #
+#       deviation based on k_choices.                                          #
+################################################################################
+x_k = []
+y_k = []
+
+mean = []
+standard_deviation = []
+for k in sorted(k_to_accuracies):
+    mean_sum = 0
+    mean_act = 0
+    for accuracy in k_to_accuracies[k]:
+        mean_sum += accuracy
+    mean_act = mean_sum / len(k_to_accuracies[k])
+    mean.append(mean_act)
+
+    variance_sum = 0
+    for accuracy in k_to_accuracies[k]:
+        variance_sum += pow(accuracy - mean_act,2)
+    standard_deviation.append(np.sqrt(variance_sum / len(k_to_accuracies[k])))
+
+
+
+for k in sorted(k_to_accuracies):
+    for accuracy in k_to_accuracies[k]:
+        x_k.append(k)
+        y_k.append(accuracy)
+
+fig, ax = plt.subplots()
+ax.scatter(x_k, y_k)
+ax.plot(k_choices, mean)
+for i in range(len(k_choices)):
+    ax.plot([k_choices[i], k_choices[i]], [mean[i] - standard_deviation[i], mean[i] + standard_deviation[i]])
+
+################################################################################
+#                                 END OF YOUR CODE                             #
+################################################################################
+
+
+################################################################################
+# TODO (5):                                                                    #
+# Based on your cross-validation results above, choose the best value for k,   #
+# retrain the classifier using all the training data, and test it on the test  #
+# data. Print accuracy and  k nearest neighbor images for one image of each    #
+# class.                                                                       #
+################################################################################
+max_value = max(mean)
+max_index = mean.index(max_value)
+cross_val_k = k_choices[max_index]
+
+print("Best k choice was: ", cross_val_k)
+
+classifier = KNearestNeighbor()
+classifier.train(X_train, y_train)
+dists = classifier.compute_distances_vectorized(X_test)
+
+y_test_pred = classifier.predict_labels(dists, cross_val_k)
+
+#Get an image from each class
+images = []
+classes = []
+for i in range(len(X_test)):
+    if y_test_pred[i] not in classes:
+        classes.append(y_test_pred[i])
+        images.append([X_test[i], i])
+
+fig, axes = plt.subplots(nrows=10, ncols=12)
+for i in range(10):
+    axes[i, 0].axis('off')
+    axes[i, 0].imshow(np.reshape(images[i][0]/255, newshape=(32,32,3)))
+    k_nearest = classifier.get_k_nearest(10, dists, images[i][1])
+
+    axes[i, 1].axis('off')
+
+    for image in range(len(k_nearest)):
+        axes[i, image+2].axis('off')
+        axes[i, image+2].imshow(np.reshape(k_nearest[image]/255, newshape=(32,32,3)))
+
+plt.show()
+################################################################################
+#                                 END OF YOUR CODE                             #
+################################################################################
