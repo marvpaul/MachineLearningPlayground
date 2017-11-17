@@ -188,7 +188,6 @@ classifier.train(X_train, y_train)
 
 # Before running this cell: open `ak1163051/k_nearest_neighbor.py` and 'implement compute_distances_with_loops`
 
-
 # Compute the distance between the test data and trainings data
 dists = classifier.compute_distances_with_loops(X_test)
 print(dists.shape) # Should be: (500, 5000)
@@ -364,7 +363,7 @@ fig, axes = plt.subplots(nrows=10, ncols=12)
 for i in range(10):
     axes[i, 0].axis('off')
     axes[i, 0].imshow(np.reshape(images[i][0]/255, newshape=(32,32,3)))
-    k_nearest = classifier.get_k_nearest(10, dists, images[i][1])
+    k_nearest = classifier.get_k_nearest(cross_val_k, dists, images[i][1])
 
     axes[i, 1].axis('off')
 
