@@ -3,7 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import tensorflow
 
-
 '''
 Where r0 is a dataset which represents data from class 1, r1 dataset for class 2
 '''
@@ -47,7 +46,7 @@ inputData, out_data = preparingData(r0, r1)
 
 # Parameters for model training
 learning_rate = 0.01
-training_epochs = 100
+training_epochs = 10000
 batch_size = 20
 display_step = 1
 
@@ -61,8 +60,8 @@ b = tensorflow.Variable(tensorflow.zeros([2]))
 model = tensorflow.nn.softmax(tensorflow.matmul(x, W) + b)
 
 # Minimize error using cross entropy with l2 regularization
-l2 = tensorflow.reduce_sum(tensorflow.pow(y-model, 2))
 cross_entropy = tensorflow.reduce_mean(tensorflow.nn.softmax_cross_entropy_with_logits(logits=model, labels=y))
+l2 = 0.01 * tensorflow.nn.l2_loss(W)
 cost = cross_entropy + l2
 
 # Using gradient descent as optimizer
@@ -93,7 +92,7 @@ with tensorflow.Session() as sess:
             avg_cost += c / total_batch
         # Display logs per epoch step
         if (epoch+1) % display_step == 0:
-            print("Epoch", epoch+1, avg_cost)
+            print("Epoch", epoch+1, "Loss: ", avg_cost)
             cost_data[0].append(epoch+1)
             cost_data[1].append(avg_cost)
 
