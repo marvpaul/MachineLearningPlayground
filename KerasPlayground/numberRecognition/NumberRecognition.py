@@ -6,7 +6,7 @@ import PIL.Image as Image
 
 from keras.models import Sequential
 from keras.models import load_model
-from keras.layers import Dense, Dropout, Flatten, MaxPooling2D, Conv2D
+from keras.layers import Dense, Flatten, MaxPooling2D, Conv2D
 import matplotlib.pyplot as plt
 
 def getData(number_img, csv_path):
@@ -39,13 +39,13 @@ def getData(number_img, csv_path):
 def create_model():
     '''Create a keras model with some conv layers'''
     modelK = Sequential([
-        Conv2D(32, (3, 3), activation="relu", input_shape=images[0].shape),
-        Conv2D(32, (3, 3), activation="relu"),
+        Conv2D(6, (9, 9), activation="relu", input_shape=images[0].shape),
         MaxPooling2D(pool_size=(2, 2)),
-        Dropout(0.25),
+        Conv2D(16, (9, 9), activation="relu", input_shape=images[0].shape),
+        MaxPooling2D(pool_size=(2, 2)),
         Flatten(),
-        Dense(128, activation='relu'),
-        Dropout(0.5),
+        Dense(120, activation='relu'),
+        Dense(100, activation='relu'),
         Dense(10, activation='softmax')
     ])
 
@@ -55,9 +55,7 @@ def create_model():
     return modelK
 
 #Read and process data
-images, classes = getData(1500, "data/train.csv")
-
-
+images, classes = getData(10000, "data/train.csv")
 
 #Check if keras model exists. In case it exists, just run prediction, otherwise create, train and save a new model
 if os.path.isfile("model.keras"):
@@ -66,7 +64,7 @@ else:
     model = create_model()
 
     # Fit the model
-    model.fit(images, classes, epochs=50, batch_size=100)
+    model.fit(images, classes, epochs=20, batch_size=100)
     model.save("model.keras")
 
 test_images = images[1000:1060]
