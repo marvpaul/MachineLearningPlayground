@@ -9,9 +9,19 @@ from keras.models import load_model
 from keras.layers import Dense, Flatten, MaxPooling2D, Conv2D
 import matplotlib.pyplot as plt
 
+import numpy as np
+import pandas as pd
+import os
+import PIL.Image as Image
+
+from keras.models import Sequential
+from keras.models import load_model
+from keras.layers import Dense, Flatten, MaxPooling2D, Conv2D
+import matplotlib.pyplot as plt
+
 def getData(number_img, csv_path):
     '''
-    Read images, and save to array
+    Read images and save to array
     :param number_img: the number of images to load
     :param csv_path: the path for CSV in which the image paths are stored
     :return: image_array, classes_array
@@ -39,14 +49,14 @@ def getData(number_img, csv_path):
 def create_model():
     '''Create a keras model with some conv layers'''
     modelK = Sequential([
-        Conv2D(6, (9, 9), activation="relu", input_shape=images[0].shape),
+        Conv2D(6, (9, 9), activation="relu", input_shape=images[0].shape, kernel_initializer='random_uniform'),
         MaxPooling2D(pool_size=(2, 2)),
-        Conv2D(16, (9, 9), activation="relu", input_shape=images[0].shape),
+        Conv2D(16, (9, 9), activation="relu", input_shape=images[0].shape, kernel_initializer='random_uniform'),
         MaxPooling2D(pool_size=(2, 2)),
         Flatten(),
-        Dense(120, activation='relu'),
-        Dense(100, activation='relu'),
-        Dense(10, activation='softmax')
+        Dense(120, activation='relu', kernel_initializer='random_uniform'),
+        Dense(100, activation='relu', kernel_initializer='random_uniform'),
+        Dense(10, activation='softmax', kernel_initializer='random_uniform')
     ])
 
     modelK.compile(loss='categorical_crossentropy',
@@ -55,7 +65,12 @@ def create_model():
     return modelK
 
 #Read and process data
+
 images, classes = getData(10000, "data/train.csv")
+trainImages = images[:9960]
+trainClasses = classes[:9960]
+testImages = images[9961:]
+print("Images loaded!")
 
 #Check if keras model exists. In case it exists, just run prediction, otherwise create, train and save a new model
 if os.path.isfile("model.keras"):
@@ -64,7 +79,7 @@ else:
     model = create_model()
 
     # Fit the model
-    model.fit(images, classes, epochs=20, batch_size=100)
+    model.fit(images[:,9960], classes[:,9960], epochs=20, batch_size=100)
     model.save("model.keras")
 
 test_images = images[1000:1060]

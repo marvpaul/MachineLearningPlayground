@@ -1,5 +1,4 @@
 import numpy as np
-import lineare_algebra as math_helpers
 
 class KNearestNeighbor(object):
     """ a kNN classifier with Euclidean distance """
